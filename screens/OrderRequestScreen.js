@@ -1,17 +1,29 @@
 import React, { Component } from 'react';
-import { View, StyleSheet, Text, FlatList,TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, FlatList,TouchableOpacity,Alert } from 'react-native';
 import { ListItem } from 'react-native-elements'
 import firebase from 'firebase';
 import db from '../config'
 import MyHeader from '../components/MyHeader';
-
+import { Avatar } from "react-native-elements";
+import { TextInput } from 'react-native-gesture-handler';
 export default class OrderRequestScreen extends Component{
   constructor(){
     super()
     this.state = {
-      requestedProductsList : []
+      requestedProductsList : [],
+      amount:0,
+      finalProductsList:[],
+      email:firebase.auth().currentUser.email,
+      //timestamp: firebase.database.ServerValue.TIMESTAMP
     }
   this.requestRef= null
+  }
+  getTime(timestamp_){
+    //timestamp=new Date().getTime().toString()
+    var timestamp_ = new Date(new Date().getTime());
+
+  //timestamp.toString().slice(0,10);
+    timestamp_.toString().slice(0,10)
   }
 
   getRequestedProductsList =()=>{
@@ -31,6 +43,27 @@ export default class OrderRequestScreen extends Component{
   componentWillUnmount(){
     this.requestRef();
   }
+  addToDB = ()=>{
+    try{
+      db.collection("order").add({
+        finalorder:this.state.finalProductsList,
+        timestamp:this.getTime(timestamp_),
+        email_id:this.state.email,
+        status:'placed'
+      })
+    }
+    catch(error){
+      console.log(error)
+    }
+    Alert.alert('Products Ordered')
+  }
+  addProductOrder = (item)=>{
+    console.log(item)
+    this.setState({
+      finalProductsList:[...this.state.finalProductsList,item]
+    })
+    console.log(this.state.finalProductsList)
+  }
 
   keyExtractor = (item, index) => index.toString()
 
@@ -41,18 +74,32 @@ export default class OrderRequestScreen extends Component{
         title={item.ProductName}
         subtitle={item.ProductPrice}
         titleStyle={{ color: 'black', fontWeight: 'bold' }}
+        leftElement={
+          <Avatar
+            rounded
+            source={{
+              uri: item.ProductImage,
+            }}
+            size={"large"}
+          />
+        }
         rightElement={
-          <TouchableOpacity
+          <View>
+            <TextInput placeholder='Enter the Quantity' onChangeText={(text)=>{this.setState({
+         amount:text
+       })}} value={this.state.productAmount} style={styles.loginBox} />
+            <TouchableOpacity
           style={styles.button}
           onPress={() => {
+            item['Quantity']=this.state.amount
+            this.addProductOrder(item)
             console.log("working")
-            this.props.navigation.navigate("cartScreen", {
-              details: item,
-            });
           }}
         >
-          <Text style={{ color: "#ffff" }}>Add to cart</Text>
+          <Text style={{ color: "#ffff" }}>Add</Text>
         </TouchableOpacity>
+          </View>
+          
           }
         bottomDivider
       />
@@ -80,6 +127,13 @@ export default class OrderRequestScreen extends Component{
             )
           }
         </View>
+        <View>
+          <TouchableOpacity
+          style={styles.button_}
+          onPress={()=>{this.addToDB()}}>
+            <Text> ORDER </Text>
+            </TouchableOpacity>
+        </View>
       </View>
     )
   }
@@ -98,10 +152,20 @@ const styles = StyleSheet.create({
     justifyContent:'center',
     alignItems:'center',
     backgroundColor:"#ff5722",
-    shadowColor: "#000",
-    shadowOffset: {
-       width: 0,
-       height: 8
-     }
-  }
+  },
+  loginBox:{
+    justifyContent:'center',
+    width:150,
+    height:40,
+    borderWidth:1.5,
+    margin:10,
+},
+button_:{
+  width:100,
+  height:30,
+  justifyContent:'center',
+  alignItems:'center',
+  alignSelf:'center',
+  backgroundColor:"#ff5722",
+},
 })

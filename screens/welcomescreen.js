@@ -32,6 +32,7 @@ export default class WelcomeScreen extends Component {
       isModalVisible: "false"
     };
   }
+  
 
   userSignUp = (emailId, password, confirmPassword) => {
     if (password !== confirmPassword) {
@@ -70,7 +71,7 @@ export default class WelcomeScreen extends Component {
       .auth()
       .signInWithEmailAndPassword(emailId, password)
       .then(() => {
-        this.props.navigation.navigate("OrderRequestList");
+        this.props.navigation.navigate("OrderRequestScreen");
       })
       .catch(error => {
         var errorCode = error.code;
